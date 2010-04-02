@@ -28,7 +28,7 @@ if ($ans =~ /^y(es)?$/i)
     my $user = prompt("Smb user ?",$ENV{'USER'});
     my $pass = prompt("Smb password ?");
     open(FILE,">.c") || warn "Can't create .c for test: $!\n";
-    print FILE $server,"\t",$share,"\t",$workgroup,"\t",$user,"\t",$pass;
+    print FILE $server,"\t",$share,"\t",$workgroup,"\t",$user,"\t",$pass,"\n";
     close FILE;
   }
 
@@ -49,6 +49,7 @@ WriteMakefile
    'VERSION_FROM' => 'SmbClient.pm',
    'INC'          => "-I$include",
    'DEFINE'       => $define,
+   'SITEPREFIX'   => '/usr',
    'LIBS'         => ["-L$lib -lsmbclient"],
    'OBJECT'       => 'libauthSamba.o SmbClient.o',
    'CCFLAGS'      => $ccfl,
