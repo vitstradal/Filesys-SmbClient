@@ -98,7 +98,8 @@ SKIP: {
   # SEEK
   my $rr = seek(FD,0,SEEK_SET);
   is(getc(FD),"A","TIE: seek SEEK_SET a file");
-  undef $rr;
+
+  $rr = undef;
 
   # READ
   #diag "\nREAD\n";

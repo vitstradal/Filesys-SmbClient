@@ -84,7 +84,7 @@ BEGIN {
   Exporter::export_ok_tags('raw');
 }
 
-$VERSION = ('$Revision: 3.99_10 $ ' =~ /(\d+\.\d+(_\d+)?)/)[0];
+$VERSION = ('$Revision: 3.99_20 $ ' =~ /(\d+\.\d+(_\d+)?)/)[0];
 
 bootstrap Filesys::SmbClient $VERSION;
 
@@ -134,7 +134,7 @@ sub WRITE {
 #------------------------------------------------------------------------------
 sub SEEK {
   my ($self,$offset,$whence) = @_;
-  print "Filesys::SmbClient SEEK\n"  if ($DEBUG);
+  print "Filesys::SmbClient SEEK\n" if ($DEBUG);
   return _lseek($self->{context}, $self->{FD}, $offset, $whence);
 }
 
@@ -143,14 +143,10 @@ sub SEEK {
 #------------------------------------------------------------------------------
 sub READ {
   my ($self, undef, $len) = @_;
-  my $ref = \$_[1];
   my $off = (@_ == 4) ? $_[3] : 0;
-  # so that we can use substr() without a warning
-  $$ref = '' unless (defined $$ref);
   print "Filesys::SmbClient READ\n" if ($DEBUG);
-  defined(my $buf = _read($self->{context}, $self->{FD}, $len)) or return undef;
-  substr($$ref, $off, $len) = $buf;
-  return length($buf);
+  my $cnt = _read($self->{context}, $self->{FD}, $_[1], $len, $off);
+  return ($cnt < 0) ? undef : $cnt;
 }
 
 #------------------------------------------------------------------------------

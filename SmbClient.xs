@@ -395,32 +395,41 @@ OUTPUT:
   RETVAL
 
 
-SV *
-_read(context, fd, count)
+int
+_read(context, fd, bufsv, count, offset)
   SMBCCTX *context
   SMBCFILE *fd
-  int count
+  SV *bufsv
+  unsigned count
+  unsigned offset
 CODE:
 /* 
  * Read count bytes on file descriptor fd
  *
  */
   smbc_read_fn read_fn = smbc_getFunctionRead(context);
-  SV *sv = newSV(count);
-  int returnValue = read_fn(context, fd, SvPVX(sv), count);
+  char *buf;
+  STRLEN blen;
+
+  if (! SvOK(bufsv))
+    sv_setpvn(bufsv, "", 0);
+  (void)SvPV_force(bufsv, blen);
+
+  if (offset > SvCUR(bufsv))
+    offset = SvCUR(bufsv);
+  buf = SvGROW(bufsv, count + offset) + offset;
+  int returnValue = read_fn(context, fd, buf, count);
 #ifdef VERBOSE
   if (returnValue <= 0) {
     fprintf(stderr, "*** Error Filesys::SmbClient: "
-                    "Read %#p : %s\n", buf, strerror(errno)); 
+                    "Read %#p : %s\n", bufsv, strerror(errno)); 
   }
 #endif
-  if (returnValue < 0) {
-    SvREFCNT_dec(sv);	// so we don't leak
-    XSRETURN_UNDEF;
+  if (returnValue > 0) {
+    SvCUR_set(bufsv, offset + returnValue);
+    (void)SvPOK_only(bufsv);
   }
-  SvCUR_set(sv, returnValue);
-  SvPOK_only(sv);
-  RETVAL = sv;
+  RETVAL = returnValue;
 OUTPUT:
   RETVAL
 

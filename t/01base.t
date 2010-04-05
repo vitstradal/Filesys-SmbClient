@@ -7,7 +7,7 @@ use diagnostics;
 
 use POSIX;
 
-plan tests => 29;
+plan tests => 31;
 
 my $loaded = 1;
 ok($loaded,"Load module");
@@ -74,15 +74,16 @@ SKIP: {
   isa_ok($fd,"SMBCFILEPtr","Open test file for reading")
     or diag("With $!");
 
-  $l=undef;
+  my $buf='abcdefghi';
+  $l = _read($smb,$fd,$buf,50,3);
 
-  my $buf='';
-  while (my $l= _read($smb,$fd,50)) {$buf.=$l; }
-  if (!$buf) { ok(0, "Read file"); }
-  else {
-    ok(length($buf) == length($buffer),"Read file")
-      or diag("read ",length($buf)," bytes)");
-  }
+  is($l, length($buffer), "length on read test file")
+      or diag("read ", length($buf), " bytes)");
+  is($buf, 'abc' . $buffer, "contents on read test file");
+
+  $l = _read($smb,$fd,$buf,50,0);
+  is($l,0, "read at end-of-file returns 0");
+
   ok(_close($smb,$fd)==0,"Closing test reading file");
 
   # Read long info on a directory
