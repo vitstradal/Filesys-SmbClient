@@ -674,5 +674,3 @@ PPCODE:
   }
 
 #endif
-
-

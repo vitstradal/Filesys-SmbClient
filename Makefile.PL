@@ -19,7 +19,7 @@ warn_user("libsmbclient.so") if (!-r "$lib/libsmbclient.so");
 my $ans = 
   prompt("Do you want make tests ?(you will be prompted for server / \n".
 	   "worgroup / share / user / password to make read write access.",
-	   "yes");
+	   "no");
 if ($ans =~ /^y(es)?$/i) 
   {
     my $server = prompt("Server ?","localhost");
@@ -53,7 +53,8 @@ WriteMakefile
    'LIBS'         => ["-L$lib -lsmbclient"],
    'OBJECT'       => 'libauthSamba.o SmbClient.o',
    'PREREQ_PM'    => {
-		       Test::More => 0,
+		       'IO::Scalar' => 0,
+		       'Test::More' => 0,
 #		       perl => '5.006',
 		     },
    'PMLIBDIRS'    => [ 'lib', 'lib/Filesys' ],
@@ -97,19 +98,34 @@ sub try_to_find {
 
 sub find_path {
   my $ext = ($_[0]=~m!\.h$! ? "include" : "lib");
-  my $defaultsDir = { "/usr" => 1,
-		      "/usr/local" => 1,
-		      "/usr/local/samba" => 1,
-		      "/usr/local/samba3" => 1 };
-  my @pa = split(/:/, $ENV{PATH});
-  my @path;
-  foreach (@pa) {
-    s/bin//;
-    s!//!/!g;
-    s!/$!!g;
-    push(@path, $_."/$ext") if !$defaultsDir->{$_};
-  }
-  foreach (keys %$defaultsDir) { push(@path, $_."/$ext"); }
-  print "I search in: ",(join "\n", @path),"\n";
+  my @defaults = (
+    qw(
+      /usr/local/samba3
+      /usr/local/samba
+      /usr/local
+      /usr
+    ),
+    ''  # "" will be turned into "/lib", etc.
+  );
+  # keep the defaults in order at the end
+  my %seen = map {; ($_ => 1) } @defaults;
+  my @path = (
+    grep { -d $_ }           # only search dirs that actually exist
+    map  { ("$_/${ext}64", "$_/$ext") }  # "/lib64", "/lib"
+    (
+      grep { !$seen{$_}++ }  # unique
+      (
+        map {
+          s/\/s?bin$//;      # strip trailing /bin or /sbin
+          s!//!/!g;          # remove duplicate slashes
+          s!/$!!g;           # remove trailing slash
+          $_;                # return
+        } split(/:/, $ENV{PATH})
+      ),
+    ),
+    @defaults
+  );
+
+  print "Searching these directories: \n", map { "  $_\n" } @path;
   return @path;
 }
