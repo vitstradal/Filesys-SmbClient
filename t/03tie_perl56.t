@@ -1,13 +1,10 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use Test::More;
 use Filesys::SmbClient;
 use strict;
-use warnings;
 use diagnostics;
 use Config;
-
-use POSIX;
 
 if( !$Config{'PERL_API_REVISION'} or !$Config{'PERL_VERSION'} or 
     ($Config{'PERL_API_REVISION'} != 5  or $Config{PERL_VERSION}<6)) {
@@ -24,12 +21,12 @@ my $buffer = "A test of write call\n";
 my $buffer2 = "buffer of 1234\n";
 
 SKIP: {
-  skip "No server defined for test at perl Makefile.PL", 20 unless (open(F, ".c"));
-
-  my $l = <F>;
-  chomp($l); 
-  close(F);
-
+  skip "No server defined for test at perl Makefile.PL", 20 if (!-e ".c");
+if (-e ".c") {
+  use POSIX;
+  my $ok = 0;
+  open(F,".c") || die "Can't read .c\n";
+  my $l = <F>; chomp($l); 
   my @l = split(/\t/, $l);
   my %param = 
     (
@@ -38,7 +35,7 @@ SKIP: {
      workgroup => $l[2],
      debug     =>  0
     );
-  my $smb = Filesys::SmbClient->new(%param);
+  my $smb = new Filesys::SmbClient(%param);
   my $server = "smb://$l[0]/$l[1]";
 
   # Create a directory
@@ -69,8 +66,8 @@ SKIP: {
   # TIEHANDLE
   ok(open(FD,"$server/toto/tata"),"TIE: read a file") or diag("With $!");
   # READLINE
-  is(scalar<FD>,$buffer, "TIE: Read one line of a file");
-  is(scalar<FD>,$buffer2, "TIE: Read another line of a file");
+  is(scalar<FD>,$buffer, "TIE: Read one ligne of a file");
+  is(scalar<FD>,$buffer2, "TIE: Read another ligne of a file");
   # GETC
   is(getc(FD),6,"TIE: getc of a file");
   is(getc(FD),"\n","TIE: getc of a file");
@@ -109,4 +106,5 @@ SKIP: {
 
   # Erase this directory
   ok($smb->rmdir("$server/toto/"),"Rm directory") or diag("With $!");
+}
 }

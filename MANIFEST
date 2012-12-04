@@ -1,26 +1,19 @@
-Changes
-config.h
 config.h.in
-config.log
-config.status
+COPYING
 configure
 configure.in
-COPYING
-lib/Filesys/SmbClient.pm
-lib/Filesys/SmbClient/DirHandle.pm
-lib/Filesys/SmbClient/FileHandle.pm
+README
+Changes
+MANIFEST
+Makefile.PL
+SmbClient.pm
+SmbClient.xs
 libauthSamba.c
 libauthSamba.h
-Makefile.PL
-MANIFEST			This list of files
-META.yml
-README
 smb2www-2.cgi
 smb2www.css
-SmbClient.xs
 t/01base.t
 t/02tie.t
 t/03tie_perl56.t
-t/04iohandle.t
-t/05free_context.t
 typemap
+META.yml                                 Module meta-data (added by MakeMaker)

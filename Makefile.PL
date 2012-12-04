@@ -19,7 +19,7 @@ warn_user("libsmbclient.so") if (!-r "$lib/libsmbclient.so");
 my $ans = 
   prompt("Do you want make tests ?(you will be prompted for server / \n".
 	   "worgroup / share / user / password to make read write access.",
-	   "no");
+	   "yes");
 if ($ans =~ /^y(es)?$/i) 
   {
     my $server = prompt("Server ?","localhost");
@@ -28,7 +28,7 @@ if ($ans =~ /^y(es)?$/i)
     my $user = prompt("Smb user ?",$ENV{'USER'});
     my $pass = prompt("Smb password ?");
     open(FILE,">.c") || warn "Can't create .c for test: $!\n";
-    print FILE $server,"\t",$share,"\t",$workgroup,"\t",$user,"\t",$pass,"\n";
+    print FILE $server,"\t",$share,"\t",$workgroup,"\t",$user,"\t",$pass;
     close FILE;
   }
 
@@ -46,21 +46,20 @@ system("./configure --with-samba-prefix=$prefix") == 0
 WriteMakefile
   (
    'NAME'         => 'Filesys::SmbClient',
-   'VERSION_FROM' => 'lib/Filesys/SmbClient.pm',
+   'VERSION_FROM' => 'SmbClient.pm',
    'INC'          => "-I$include",
    'DEFINE'       => $define,
-   'CCFLAGS'      => "-Wall -Wunused -Wsign-compare -Wuninitialized",
    'LIBS'         => ["-L$lib -lsmbclient"],
    'OBJECT'       => 'libauthSamba.o SmbClient.o',
-   'PREREQ_PM'    => {
-		       'IO::Scalar' => 0,
-		       'Test::More' => 0,
-#		       perl => '5.006',
-		     },
-   'PMLIBDIRS'    => [ 'lib', 'lib/Filesys' ],
-   'clean'        => { FILES => "*~ config.status config.log config.h config.cache .c" },
-    'AUTHOR'      => 'Alain BARBET (alian@alianwebserver.com)',
-    'ABSTRACT'    => 'Filesys::SmbClient - Interface for access Samba filesystem with libsmclient.so',
+   'CCFLAGS'      => $ccfl,
+   'PREREQ_PM'    => { Test::More => 0},
+   'clean' => { FILES => "*~ config.status config.log config.h config.cache .c"},
+   ($] ge '5.005') ?
+   (
+    'AUTHOR' => 'Alain BARBET (alian@alianwebserver.com)',
+    'ABSTRACT' => 'Filesys::SmbClient - Interface for access Samba filesystem with libsmclient.so'
+   )
+   : ()
   );
 
 sub warn_user
@@ -97,35 +96,20 @@ sub try_to_find {
 }
 
 sub find_path {
-  my $ext = ($_[0]=~m!\.h$! ? "include" : "lib");
-  my @defaults = (
-    qw(
-      /usr/local/samba3
-      /usr/local/samba
-      /usr/local
-      /usr
-    ),
-    ''  # "" will be turned into "/lib", etc.
-  );
-  # keep the defaults in order at the end
-  my %seen = map {; ($_ => 1) } @defaults;
-  my @path = (
-    grep { -d $_ }           # only search dirs that actually exist
-    map  { ("$_/${ext}64", "$_/$ext") }  # "/lib64", "/lib"
-    (
-      grep { !$seen{$_}++ }  # unique
-      (
-        map {
-          s/\/s?bin$//;      # strip trailing /bin or /sbin
-          s!//!/!g;          # remove duplicate slashes
-          s!/$!!g;           # remove trailing slash
-          $_;                # return
-        } split(/:/, $ENV{PATH})
-      ),
-    ),
-    @defaults
-  );
-
-  print "Searching these directories: \n", map { "  $_\n" } @path;
+  my $ext = ($_[0]=~m!\.h$! ? "include" : ( $ENV{HOSTTYPE}=~m!x86_64! ? "lib64" : "lib"));
+  my $defaultsDir = { "/usr" => 1,
+		      "/usr/local" => 1,
+		      "/usr/local/samba" => 1,
+		      "/usr/local/samba3" => 1 };
+  my @pa = split(/:/, $ENV{PATH});
+  my @path;
+  foreach (@pa) {
+    s/bin//;
+    s!//!/!g;
+    s!/$!!g;
+    push(@path, $_."/$ext") if !$defaultsDir->{$_};
+  }
+  foreach (keys %$defaultsDir) { push(@path, $_."/$ext"); }
+  print "I search in: ",(join "\n", @path),"\n";
   return @path;
 }
