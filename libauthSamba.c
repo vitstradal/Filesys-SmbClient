@@ -2,9 +2,9 @@
 #include <string.h>
 #include "libauthSamba.h"
 
-char User[30];
-char Password[30];
-char Workgroup[30];
+char User[50];
+char Password[50];
+char Workgroup[50];
 
 /*-----------------------------------------------------------------------------
  * set_fn

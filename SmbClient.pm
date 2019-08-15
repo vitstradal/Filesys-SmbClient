@@ -241,10 +241,12 @@ sub new   {
     if (!$vars{'username'})  { $vars{'username'}=""; }
     if (!$vars{'password'})  { $vars{'password'}=""; }
     if (!$vars{'debug'})     { $vars{'debug'}=0; }
+    if (!$vars{'use_nt_hash'})     { $vars{'use_nt_hash'}=0; }
     push(@l, $vars{'username'});
     push(@l, $vars{'password'});
     push(@l, $vars{'workgroup'});
     push(@l, $vars{'debug'});
+    push(@l, $vars{'use_nt_hash'});
     print "Filesys::SmbClient new>",join(" ", @l),"\n" if $vars{'debug'};
     $self->{params}= \%vars;
   }

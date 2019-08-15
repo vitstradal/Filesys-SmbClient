@@ -29,11 +29,12 @@ MODULE = Filesys::SmbClient    PACKAGE = Filesys::SmbClient
 PROTOTYPES: ENABLE
 
 SMBCCTX *
-_init(user, password, workgroup, debug)
+_init(user, password, workgroup, debug, use_nt_hash)
   char *user
   char *password  
   char* workgroup
   int debug
+  int use_nt_hash
 CODE:
 /* 
  * Initialize things ... 
@@ -47,6 +48,7 @@ smbc_setDebug(context, 4); //4 gives a good level of trace.
 set_fn(workgroup, user, password);
 smbc_setFunctionAuthData(context, auth_fn);
 smbc_setDebug(context, debug);
+smbc_setOptionUseNTHash(context, use_nt_hash);
 if (smbc_init_context(context) == 0) {
   smbc_free_context(context, 1); 
   XSRETURN_UNDEF;

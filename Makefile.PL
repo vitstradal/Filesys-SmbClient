@@ -23,7 +23,7 @@ my $ans =
 if ($ans =~ /^y(es)?$/i) 
   {
     my $server = prompt("Server ?","localhost");
-    my $share = prompt("Share ?","homes");
+    my $share = prompt("Share ?","test");
     my $workgroup = prompt("Workgroup/Domain ?","");
     my $user = prompt("Smb user ?",$ENV{'USER'});
     my $pass = prompt("Smb password ?");
